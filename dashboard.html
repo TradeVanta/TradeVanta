@@ -1,4 +1,3 @@
-<!-- COMPLETE FIXED DASHBOARD CODE -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +5,150 @@
   <title>Account</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <style>
-    /* ... your existing CSS remains unchanged ... */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background-color: #000;
+      color: white;
+      font-size: 3rem;
+    }
+
+    header {
+      background-color: #000;
+      text-align: center;
+      padding: 1rem;
+      font-size: 3rem;
+    }
+
+    .welcome-section {
+      background-color: #091dfc;
+      text-align: left;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .welcome-content {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .welcome-content img {
+      width: 100px;
+      height: 100px;
+    }
+
+    .welcome-content h2 {
+      font-size: 3rem;
+      color: white;
+      margin: 0;
+    }
+
+    .balance-card {
+      background-color: #222;
+      margin: -2rem 1rem 1rem;
+      padding: 1.5rem;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .balance-card .amount {
+      font-size: 4.3rem;
+      color: orange;
+      margin-bottom: 0.3rem;
+    }
+
+    .balance-card .usd {
+      font-size: 2.9rem;
+      color: #aaa;
+    }
+
+    .balance-card .label {
+      margin: 0.5rem 0 1rem;
+      color: #aaa;
+    }
+
+    .balance-card .buttons {
+      display: flex;
+      justify-content: space-around;
+      gap: 1rem;
+    }
+
+    .balance-card button {
+      background-color: #1a2cff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.6rem 1.2rem;
+      font-size: 1.7rem;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .balance-card button a {
+      color: inherit;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .welcome-message {
+      background-color: #222;
+      margin: 1rem;
+      padding: 1rem;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .welcome-message i {
+      color: #1a2cff;
+      margin-right: 8px;
+    }
+
+    .services {
+      margin: 1rem;
+    }
+
+    .services h3 {
+      margin-bottom: 1rem;
+      font-size: 5rem;
+    }
+
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    .service-item {
+      background-color: #222;
+      border-radius: 8px;
+      padding: 0.8rem 0;
+      text-align: center;
+      font-size: 2rem;
+      color: white;
+      cursor: pointer;
+    }
+
+    .service-item i {
+      font-size: 2rem;
+      display: block;
+      margin-bottom: 0.3rem;
+      color: #1a2cff;
+    }
   </style>
 </head>
 <body>
@@ -49,7 +191,7 @@
     </div>
   </div>
 
-  <!-- Chat and UI logic -->
+  <!-- JivoChat Script -->
   <script>
     function openJivoChat() {
       if (window.jivo_api) jivo_api.open();
@@ -58,6 +200,7 @@
     document.getElementById('deposit-button').addEventListener('click', openJivoChat);
     document.getElementById('transfer-button').addEventListener('click', openJivoChat);
 
+    // Open history and login pages
     document.getElementById('logout-button').addEventListener('click', () => {
       window.location.href = 'login.html';
     });
@@ -66,6 +209,7 @@
       window.location.href = 'history.html';
     });
 
+    // Optional: Make other service items open chat except Logout/History
     const serviceItems = document.querySelectorAll('.service-item');
     serviceItems.forEach(item => {
       const isLogout = item.id === 'logout-button';
@@ -74,6 +218,7 @@
         item.addEventListener('click', openJivoChat);
       }
     });
+    
   </script>
 
   <!-- Jivochat Widget -->
@@ -102,15 +247,16 @@
     })();
   </script>
 
-  <!-- Firebase SDK + Firestore logic -->
+  <!-- Firebase SDK -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
     import {
       getFirestore,
       doc,
-      onSnapshot
+      onSnapshot,
+      updateDoc // Keep updateDoc if you have other update functionalities
     } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"; // Import getAuth and onAuthStateChanged
 
     const firebaseConfig = {
       apiKey: "AIzaSyDtCfsMkc_Z_9ZeF0TEHTDFBzLlkU-egSc",
@@ -123,45 +269,50 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const auth = getAuth(app);
+    const auth = getAuth(app); // Get the Auth instance
 
     function updateBalance(balance, currency) {
-      const currencySymbols = {
-        USD: '$', EUR: '€', GBP: '£',
-        INR: '₹', CAD: 'C$', AUD: 'A$',
-        NGN: '₦', JPY: '¥'
-      };
-      const symbol = currencySymbols[currency] || '$';
-      document.getElementById('balance-amount').textContent = `≈ ${symbol}${parseFloat(balance).toFixed(2)}`;
-    }
+  const symbolMap = {
+    USD: '$', EUR: '€', GBP: '£',
+    INR: '₹', CAD: 'C$', AUD: 'A$',
+    NGN: '₦', JPY: '¥'
+  };
 
+  const symbol = symbolMap[currency] || '';
+  document.getElementById("balanceAmount").textContent = symbol + (balance || 0);
+}
+    // Listen for authentication state changes
     onAuthStateChanged(auth, (user) => {
       if (user) {
+        // User is signed in, get their UID
         const userId = user.uid;
-        const userRef = doc(db, "users", userId);
+        console.log("User is signed in with UID:", userId);
 
+        const userRef = doc(db, "users", userId);
         onSnapshot(userRef, (docSnap) => {
           if (docSnap.exists()) {
             const data = docSnap.data();
-            const username = data.username || 'User';
-            const balance = data.balance || 0;
-            const currency = data.currency || 'USD';
-
-            document.getElementById("welcome-username").textContent = `Welcome, ${username}`;
-            updateBalance(balance, currency);
+            document.getElementById("welcome-username").textContent = Welcome, ${data.username || 'User'};
+            updateBalance(data.balance || 0, data.currency || 'USD');
           } else {
-            console.warn("User document does not exist.");
+            console.log("User document does not exist for UID:", userId);
+            // Optionally, redirect to a setup page or show a message if user document is missing
           }
-        }, (err) => {
-          console.error("Error reading user data:", err);
+        }, (error) => {
+          console.error("Error listening to user document:", error);
         });
-
       } else {
-        document.getElementById("welcome-username").textContent = "Welcome";
-        updateBalance(0, 'USD');
+        // User is signed out or no user is logged in
+        console.log("No user is signed in.");
+        document.getElementById("welcome-username").textContent = "Welcome"; // Reset welcome message
+        updateBalance(0, 'USD'); // Reset balance
+        // Redirect to login page
         window.location.href = 'login.html';
       }
     });
+
+    // Remove the old DOMContentLoaded listener for listenToUserData
+    // document.addEventListener("DOMContentLoaded", listenToUserData); // REMOVE THIS LINE
   </script>
 </body>
 </html>
