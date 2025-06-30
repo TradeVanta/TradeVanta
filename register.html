@@ -123,8 +123,11 @@
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
   <script>
+    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyDtCfsMkc_Z_9ZeF0TEHTDFBzLlkU-egSc",
       authDomain: "tradevanta-a3e0d.firebaseapp.com",
@@ -135,6 +138,7 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const auth = firebase.auth();
   </script>
 
   <script>
@@ -174,7 +178,6 @@
         const fullname = document.getElementById("fullname").value.trim();
         const country = document.getElementById("country").value;
         const currency = document.getElementById("currency").value;
-        const balance = 0; // Initial balance
 
         if (!username || !fullname || !country || !currency) {
           return alert("Please complete all signup fields.");
@@ -184,22 +187,46 @@
           return alert("Password must be at least 6 characters and include a number and a letter.");
         }
 
-        const userData = { username, fullname, email, country, currency, balance, password };
-
         try {
-          await db.collection("users").add(userData);
+          const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+          const uid = userCredential.user.uid;
+
+          const userData = {
+            username,
+            fullname,
+            email,
+            country,
+            currency,
+            balance: 0
+          };
+
+          await db.collection("users").doc(uid).set(userData);
+
+          localStorage.setItem("username", username);
+          localStorage.setItem("balance", 0);
           window.location.href = "dashboard.html";
-        } catch (err) {
-          console.error(err);
-          alert("Error saving to Firestore.");
+        } catch (error) {
+          console.error("Signup Error:", error);
+          alert(error.message);
         }
+
       } else {
         try {
-          await db.collection("logins").add({ email, password });
+          const userCredential = await auth.signInWithEmailAndPassword(email, password);
+          const uid = userCredential.user.uid;
+
+          const docSnap = await db.collection("users").doc(uid).get();
+          if (!docSnap.exists) {
+            return alert("User data not found.");
+          }
+
+          const userData = docSnap.data();
+          localStorage.setItem("username", userData.username);
+          localStorage.setItem("balance", userData.balance);
           window.location.href = "dashboard.html";
-        } catch (err) {
-          console.error(err);
-          alert("Error saving to Firestore.");
+        } catch (error) {
+          console.error("Login Error:", error);
+          alert("Invalid credentials or user not found.");
         }
       }
     });
