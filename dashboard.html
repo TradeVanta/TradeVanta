@@ -191,7 +191,6 @@
     </div>
   </div>
 
-  <!-- JivoChat Script -->
   <script>
     function openJivoChat() {
       if (window.jivo_api) jivo_api.open();
@@ -200,9 +199,10 @@
     document.getElementById('deposit-button').addEventListener('click', openJivoChat);
     document.getElementById('transfer-button').addEventListener('click', openJivoChat);
 
-    // Open history and login pages
+    // Logout button uses Firebase Auth logout now, will be handled by the onAuthStateChanged listener
     document.getElementById('logout-button').addEventListener('click', () => {
-      window.location.href = 'login.html';
+      // No longer directly redirecting here; Firebase Auth will handle it via onAuthStateChanged
+      // You'll add signOut(auth) here in the Firebase section
     });
 
     document.getElementById('history-button').addEventListener('click', () => {
@@ -229,7 +229,6 @@
     }
   </script>
 
-  <!-- Jivochat Widget -->
   <script>
     (function () {
       var widget_id = 'wV6zTzxS5q';
@@ -255,7 +254,6 @@
     })();
   </script>
 
-  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
     import {
@@ -264,9 +262,10 @@
       onSnapshot,
       updateDoc
     } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"; // Import getAuth, onAuthStateChanged, and signOut
 
     const firebaseConfig = {
-      apiKey: "AIzaSyDtCf….xxx",
+      apiKey: "AIzaSyDtCf….xxx", // IMPORTANT: Replace with your actual Firebase API Key
       authDomain: "tradevanta-a3e0d.firebaseapp.com",
       projectId: "tradevanta-a3e0d",
       storageBucket: "tradevanta-a3e0d.appspot.com",
@@ -276,29 +275,71 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app); // Get the Auth instance
 
-    function listenToUserData() {
-      const userId = localStorage.getItem("userId");
-      if (!userId) {
-        console.error("User ID not found in localStorage.");
-        return;
-      }
-
-      const userRef = doc(db, "users", userId);
-      onSnapshot(userRef, (docSnap) => {
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          document.getElementById("welcome-username").textContent = `Welcome, ${data.username || 'User'}`;
-          updateBalance(data.balance || 0, data.currency || 'USD');
-        } else {
-          console.log("User document does not exist.");
-        }
-      }, (error) => {
-        console.error("Error listening to user document:", error);
-      });
+    // Function to update the balance display
+    // Moved outside the onAuthStateChanged for better scope, though it was fine where it was.
+    // Ensure this matches the function defined earlier if you copied it.
+    /*
+    function updateBalance(balance, currency) {
+      const symbol = {
+        USD: '$', EUR: '€', GBP: '£',
+        INR: '₹', CAD: 'C$', AUD: 'A$',
+        NGN: '₦', JPY: '¥'
+      }[currency] || '$';
+      document.getElementById('balance-amount').textContent = `≈ ${symbol}${parseFloat(balance).toFixed(2)}`;
     }
+    */
+    // The updateBalance function is already defined above the JivoChat script,
+    // so no need to redefine it here. Just ensure it's accessible.
 
-    document.addEventListener("DOMContentLoaded", listenToUserData);
+    // Listen for authentication state changes
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, get their UID
+        const userId = user.uid;
+        console.log("User is signed in with UID:", userId);
+
+        const userRef = doc(db, "users", userId);
+        onSnapshot(userRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            document.getElementById("welcome-username").textContent = `Welcome, ${data.username || 'User'}`;
+            // Ensure the updateBalance function is correctly called
+            updateBalance(data.balance || 0, data.currency || 'USD');
+          } else {
+            console.warn("User document does not exist for UID:", userId);
+            // Optionally: Clear displayed data or redirect if user data is unexpectedly missing
+            document.getElementById("welcome-username").textContent = "Welcome";
+            updateBalance(0, 'USD');
+          }
+        }, (error) => {
+          console.error("Error listening to user document:", error);
+          // Handle Firestore read errors, perhaps by logging out or showing an error message
+          document.getElementById("welcome-username").textContent = "Welcome, Error";
+          updateBalance(0, 'USD');
+        });
+      } else {
+        // User is signed out or no user is logged in
+        console.log("No user is signed in. Redirecting to login.");
+        document.getElementById("welcome-username").textContent = "Welcome"; // Reset welcome message
+        updateBalance(0, 'USD'); // Reset balance
+        // Redirect to login page
+        window.location.href = 'login.html';
+      }
+    });
+
+    // Add event listener for the logout button to actually sign out the user
+    document.getElementById('logout-button').addEventListener('click', async () => {
+      try {
+        await signOut(auth); // Sign out the user
+        // The onAuthStateChanged listener will catch this and redirect to login.html
+        console.log("User signed out.");
+      } catch (error) {
+        console.error("Error signing out:", error);
+        alert("Failed to log out. Please try again.");
+      }
+    });
   </script>
 </body>
 </html>
