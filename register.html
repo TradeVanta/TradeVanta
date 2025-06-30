@@ -79,6 +79,18 @@
       color: #888;
       margin-bottom: 10px;
     }
+
+    .logout-btn {
+      margin-top: 10px;
+      display: none;
+      width: 100%;
+      padding: 10px;
+      background-color: #333;
+      border: none;
+      color: #ccc;
+      border-radius: 5px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -118,6 +130,7 @@
       </p>
 
       <button type="submit" class="submit-btn" id="submitBtn">Login</button>
+      <button type="button" class="logout-btn" id="logoutBtn">Logout</button>
     </form>
   </div>
 
@@ -127,7 +140,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
   <script>
-    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyDtCfsMkc_Z_9ZeF0TEHTDFBzLlkU-egSc",
       authDomain: "tradevanta-a3e0d.firebaseapp.com",
@@ -147,12 +159,14 @@
     const form = document.getElementById("authForm");
     const signupOnly = document.querySelectorAll(".signup-only");
     const submitBtn = document.getElementById("submitBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
 
     loginBtn.addEventListener("click", () => {
       loginBtn.classList.add("active");
       signupBtn.classList.remove("active");
       signupOnly.forEach(el => el.style.display = "none");
       submitBtn.textContent = "Login";
+      logoutBtn.style.display = "none";
     });
 
     signupBtn.addEventListener("click", () => {
@@ -160,6 +174,7 @@
       loginBtn.classList.remove("active");
       signupOnly.forEach(el => el.style.display = "block");
       submitBtn.textContent = "Signup";
+      logoutBtn.style.display = "none";
     });
 
     form.addEventListener("submit", async (e) => {
@@ -169,15 +184,13 @@
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value.trim();
 
-      if (!email || !password) {
-        return alert("Please fill in all required fields.");
-      }
+      if (!email || !password) return alert("Please fill in all required fields.");
 
       if (isSignup) {
         const username = document.getElementById("username").value.trim();
         const fullname = document.getElementById("fullname").value.trim();
         const country = document.getElementById("country").value;
-        const currency = document.getElementById("currency").value;
+        const currency = document.getElementById("currency").value; // <- Now stores code
 
         if (!username || !fullname || !country || !currency) {
           return alert("Please complete all signup fields.");
@@ -196,7 +209,7 @@
             fullname,
             email,
             country,
-            currency,
+            currency, // <- Save currency code
             balance: 0
           };
 
@@ -216,9 +229,7 @@
           const uid = userCredential.user.uid;
 
           const docSnap = await db.collection("users").doc(uid).get();
-          if (!docSnap.exists) {
-            return alert("User data not found.");
-          }
+          if (!docSnap.exists) return alert("User data not found.");
 
           const userData = docSnap.data();
           localStorage.setItem("username", userData.username);
@@ -231,23 +242,23 @@
       }
     });
 
+    logoutBtn.addEventListener("click", async () => {
+      await auth.signOut();
+      localStorage.clear();
+      window.location.href = "register.html";
+    });
+
     // Default to signup view
     signupBtn.click();
 
-    // Populate country and currency dropdowns
+    // Populate dropdowns
     const countries = [
       "United States", "United Kingdom", "Canada", "India", "Australia", "Germany", "France", "China", "South Africa"
     ];
 
     const currencyMap = {
-      "USD": "$",
-      "EUR": "€",
-      "GBP": "£",
-      "INR": "₹",
-      "AUD": "A$",
-      "CAD": "C$",
-      "ETH": "Ξ",
-      "USDT": "₮"
+      "USD": "$", "EUR": "€", "GBP": "£", "INR": "₹",
+      "AUD": "A$", "CAD": "C$", "ETH": "Ξ", "USDT": "₮"
     };
 
     const countrySelect = document.getElementById("country");
@@ -261,7 +272,7 @@
 
     Object.entries(currencyMap).forEach(([code, symbol]) => {
       const opt = document.createElement("option");
-      opt.value = symbol;
+      opt.value = code; // Save currency code instead of symbol
       opt.textContent = `${symbol} (${code})`;
       currencySelect.appendChild(opt);
     });
