@@ -162,7 +162,7 @@
   </div>
 
   <div class="balance-card">
-    <div class="amount"><span id="balance-amount" class="usd">≈ 0.00 USD</span></div>
+    <div class="amount"><span id="balance-amount" class="usd">≈ 0.00</span></div>
     <div class="label">Wallet Value</div>
     <div class="buttons">
       <button id="deposit-button"><i class="fas fa-wallet"></i>Deposit</button>
@@ -191,6 +191,7 @@
     </div>
   </div>
 
+  <!-- JivoChat Script -->
   <script>
     function openJivoChat() {
       if (window.jivo_api) jivo_api.open();
@@ -199,10 +200,16 @@
     document.getElementById('deposit-button').addEventListener('click', openJivoChat);
     document.getElementById('transfer-button').addEventListener('click', openJivoChat);
 
+    // Open history and login pages
+    document.getElementById('logout-button').addEventListener('click', () => {
+      window.location.href = 'login.html';
+    });
+
     document.getElementById('history-button').addEventListener('click', () => {
       window.location.href = 'history.html';
     });
 
+    // Optional: Make other service items open chat except Logout/History
     const serviceItems = document.querySelectorAll('.service-item');
     serviceItems.forEach(item => {
       const isLogout = item.id === 'logout-button';
@@ -213,16 +220,16 @@
     });
 
     function updateBalance(balance, currency) {
-  const symbolMap = {
-    USD: '$', EUR: '€', GBP: '£',
-    INR: '₹', CAD: 'C$', AUD: 'A$',
-    NGN: '₦', JPY: '¥'
-  };
-  const symbol = symbolMap[currency?.toUpperCase()] || '';
-  document.getElementById("balance-amount").textContent = symbol + (balance || 0);
-}
+      const symbol = {
+        USD: '$', EUR: '€', GBP: '£',
+        INR: '₹', CAD: 'C$', AUD: 'A$',
+        NGN: '₦', JPY: '¥'
+      }[currency] || '$';
+      document.getElementById('balance-amount').textContent = `≈ ${symbol}${parseFloat(balance).toFixed(2)}`;
+    }
   </script>
 
+  <!-- Jivochat Widget -->
   <script>
     (function () {
       var widget_id = 'wV6zTzxS5q';
@@ -232,7 +239,7 @@
         var s = document.createElement('script');
         s.type = 'text/javascript';
         s.async = true;
-        s.src = 'https://code.jivosite.com/script/widget/' + widget_id;
+        s.src = '//code.jivosite.com/script/widget/' + widget_id;
         var ss = document.getElementsByTagName('script')[0];
         ss.parentNode.insertBefore(s, ss);
       }
@@ -248,17 +255,19 @@
     })();
   </script>
 
+  <!-- Firebase SDK -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
     import {
       getFirestore,
       doc,
-      onSnapshot
+      onSnapshot,
+      updateDoc // Keep updateDoc if you have other update functionalities
     } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"; // Import getAuth and onAuthStateChanged
 
     const firebaseConfig = {
-      apiKey: "AIzaSyDtCfsMkc_Z_9ZeF0TEHTDFBzLlkU-egSc", // Replace with your actual Firebase API key
+      apiKey: "AIzaSyDtCfsMkc_Z_9ZeF0TEHTDFBzLlkU-egSc",
       authDomain: "tradevanta-a3e0d.firebaseapp.com",
       projectId: "tradevanta-a3e0d",
       storageBucket: "tradevanta-a3e0d.appspot.com",
@@ -268,11 +277,24 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const auth = getAuth(app);
+    const auth = getAuth(app); // Get the Auth instance
 
+    function updateBalance(balance, currency) {
+      const symbol = {
+        USD: '$', EUR: '€', GBP: '£',
+        INR: '₹', CAD: 'C$', AUD: 'A$',
+        NGN: '₦', JPY: '¥'
+      }[currency] || '$';
+      document.getElementById('balance-amount').textContent = `≈ ${symbol}${parseFloat(balance).toFixed(2)}`;
+    }
+
+    // Listen for authentication state changes
     onAuthStateChanged(auth, (user) => {
       if (user) {
+        // User is signed in, get their UID
         const userId = user.uid;
+        console.log("User is signed in with UID:", userId);
+
         const userRef = doc(db, "users", userId);
         onSnapshot(userRef, (docSnap) => {
           if (docSnap.exists()) {
@@ -280,30 +302,24 @@
             document.getElementById("welcome-username").textContent = `Welcome, ${data.username || 'User'}`;
             updateBalance(data.balance || 0, data.currency || 'USD');
           } else {
-            document.getElementById("welcome-username").textContent = "Welcome";
-            updateBalance(0, 'USD');
+            console.log("User document does not exist for UID:", userId);
+            // Optionally, redirect to a setup page or show a message if user document is missing
           }
         }, (error) => {
-          console.error("Error reading user data:", error);
-          document.getElementById("welcome-username").textContent = "Welcome, Error";
-          updateBalance(0, 'USD');
+          console.error("Error listening to user document:", error);
         });
       } else {
-        document.getElementById("welcome-username").textContent = "Welcome";
-        updateBalance(0, 'USD');
+        // User is signed out or no user is logged in
+        console.log("No user is signed in.");
+        document.getElementById("welcome-username").textContent = "Welcome"; // Reset welcome message
+        updateBalance(0, 'USD'); // Reset balance
+        // Redirect to login page
         window.location.href = 'login.html';
       }
     });
 
-    document.getElementById('logout-button').addEventListener('click', async () => {
-      try {
-        await signOut(auth);
-        console.log("User signed out.");
-      } catch (error) {
-        console.error("Sign out error:", error);
-        alert("Failed to log out. Please try again.");
-      }
-    });
+    // Remove the old DOMContentLoaded listener for listenToUserData
+    // document.addEventListener("DOMContentLoaded", listenToUserData); // REMOVE THIS LINE
   </script>
 </body>
 </html>
