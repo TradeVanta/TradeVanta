@@ -5,139 +5,112 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Withdraw</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-<style>
-  /* Base Styles */
-  body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    background-color: #000000;
-    color: #FFFFFF;
-  }
-
- .header {
-  background-color: #091DFC;
-  color: #fff;
-  padding: 16px;
-  font-size: 18px;
-  text-align: center;
-  border: 1px solid #ccc;
-  font-weight: bold;
-}
-
-  /* Container */
-  .container {
-    padding: 20px;
-  }
-
-  /* Card */
-  .card {
-    background-color: #091DFC;
-    padding: 8px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-  }
-
-  /* Withdraw Section */
-  .withdraw-section {
-    text-align: center;
-    margin-bottom: 10px;
-  }
-
-  .withdraw-section input {
-    font-size: 28px;
-    text-align: center;
-    border: none;
-    border-bottom: 1px solid #ccc;
-    width: 100px;
-    outline: none;
-  }
-
-  .note {
-    font-size: 14px;
-    color: #777;
-    margin-top: 5px;
-  }
-
-  /* Bank Info & Form */
-  .bank-info, .add-bank-form {
-    margin-top: 30px;
-    padding: 15px;
-    border: 1px solid #eee;
-    border-radius: 10px;
-  }
-
-  .bank-info {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .add-bank-form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .add-bank-form input {
-    width: 90%;
-    margin: 8px 0;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-  }
-
-  /* Error Message */
-  .error {
-    color: red;
-    font-size: 14px;
-    margin-top: 10px;
-    text-align: center;
-    display: none;
-  }
-
-  /* Buttons */
-  .withdraw-btn, .confirm-btn, .add-bank-btn {
-    margin-top: 30px;
-    padding: 15px;
-    width: 100%;
-    border: none;
-    font-size: 16px;
-    font-weight: bold;
-    border-radius: 8px;
-    background-color: #f0f3f7;
-    color: #bcc2cc;
-    cursor: not-allowed;
-  }
-
-  .withdraw-btn.active, .confirm-btn.active {
-    background-color: #091DFC;
-    color: #fff;
-    cursor: pointer;
-  }
-
-  .add-bank-btn {
-    background-color: #091DFC;
-    color: #fff;
-    cursor: pointer;
-  }
-</style>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #000;
+      color: #FFF;
+    }
+    .header {
+      background-color: #091DFC;
+      padding: 16px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .container {
+      padding: 20px;
+    }
+    .card {
+      background-color: #091DFC;
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    .withdraw-section {
+      text-align: center;
+    }
+    .withdraw-section input {
+      font-size: 24px;
+      text-align: center;
+      border: none;
+      border-bottom: 1px solid #ccc;
+      background-color: #000;
+      color: #FFF;
+      outline: none;
+    }
+    .error {
+      color: red;
+      font-size: 14px;
+      margin-top: 10px;
+      text-align: center;
+      display: none;
+    }
+    .bank-info, .add-bank-form {
+      margin-top: 30px;
+      padding: 15px;
+      border: 1px solid #eee;
+      border-radius: 10px;
+    }
+    .bank-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .add-bank-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .add-bank-form input {
+      width: 90%;
+      margin: 8px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .withdraw-btn, .confirm-btn, .add-bank-btn {
+      margin-top: 20px;
+      padding: 15px;
+      width: 100%;
+      border: none;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      background-color: #333;
+      color: #999;
+      cursor: not-allowed;
+    }
+    .withdraw-btn.active, .confirm-btn.active {
+      background-color: #091DFC;
+      color: #fff;
+      cursor: pointer;
+    }
+    .add-bank-btn {
+      background-color: #091DFC;
+      color: #fff;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
 
-<div class="header">Withdraw </div>
+<div class="header">Withdraw</div>
 
 <div class="container">
   <div class="card">
-    <p><strong><span id="currency-symbol">$</span><span id="balance">0.00 </span></strong></p>           
-     <h3>Available  </h3>
+    <p><strong><span id="currency-symbol">$</span><span id="balance">0.00</span></strong></p>           
+    <h3>Available</h3>
   </div>
 
   <div class="withdraw-section">
-    <label for="amount"></label><br/>
+    <label for="amount"></label>
     <span style="font-size: 24px;" id="input-currency"></span>
     <input type="number" id="amount" min="0" />
-     <h4>Withdrew Amount </h4>
+    <h4>Withdraw Amount</h4>
   </div>
 
   <div id="bank-placeholder">
@@ -149,33 +122,32 @@
 </div>
 
 <script>
-  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyC0seQcc9v7ms5OqUCPi7rxaN4pJdP8zlE",
     authDomain: "withdrawapp-eb9a9.firebaseapp.com",
-    projectId: "withdrawapp-eb9a9",
-    storageBucket: "withdrawapp-eb9a9.appspot.com",
-    messagingSenderId: "482698678271",
-    appId: "1:482698678271:web:669173ee71c85130b621ca"
+    projectId: "withdrawapp-eb9a9"
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  const auth = firebase.auth();
 
-  // Secondary Firebase app for balance
   const firebaseConfigBalance = {
     apiKey: "AIzaSyDtCfsMkc_Z_9ZeF0TEHTDFBzLlkU-egSc",
     authDomain: "tradevanta-a3e0d.firebaseapp.com",
     projectId: "tradevanta-a3e0d"
   };
-  const appBalance = firebase.initializeApp(firebaseConfigBalance, "balanceApp");
-  const dbBalance = firebase.firestore(appBalance);
+  const balanceApp = firebase.initializeApp(firebaseConfigBalance, "balanceApp");
+  const dbBalance = firebase.firestore(balanceApp);
 
-  const auth = firebase.auth();
+  const currencySymbols = {
+    USD: '$', EUR: '€', GBP: '£', INR: '₹',
+    CAD: 'C$', AUD: 'A$', NGN: '₦', JPY: '¥'
+  };
 
-  let userBalance = 0;
-  let userCurrency = '$';
-  let bankAdded = false;
   let userId = null;
+  let userBalance = 0;
+  let userCurrency = 'USD';
+  let bankAdded = false;
 
   const amountInput = document.getElementById('amount');
   const withdrawBtn = document.getElementById('withdraw-btn');
@@ -186,11 +158,9 @@
   const bankPlaceholder = document.getElementById('bank-placeholder');
   const addBankBtn = document.getElementById('add-bank-btn');
 
-  // Wait for auth to get the current user
   auth.onAuthStateChanged(async (user) => {
     if (!user) {
-      alert("User not logged in.");
-      window.location.href = "register.html";
+      window.location.href = 'register.html';
       return;
     }
     userId = user.uid;
@@ -203,17 +173,18 @@
     if (doc.exists) {
       const data = doc.data();
       userBalance = data.balance || 0;
-      userCurrency = data.currency || '$';
-      balanceEl.textContent = userBalance;
-      currencySymbolEl.textContent = userCurrency;
-      inputCurrencyEl.textContent = userCurrency;
+      userCurrency = data.currency || 'USD';
+      const symbol = currencySymbols[userCurrency] || '';
+      balanceEl.textContent = userBalance.toFixed(2);
+      currencySymbolEl.textContent = symbol;
+      inputCurrencyEl.textContent = symbol;
     }
   }
 
   async function checkBankAccount() {
-    const bankDoc = await db.collection('bankAccounts').doc(userId).get();
-    if (bankDoc.exists) {
-      const data = bankDoc.data();
+    const doc = await db.collection("bankAccounts").doc(userId).get();
+    if (doc.exists) {
+      const data = doc.data();
       bankPlaceholder.innerHTML = `
         <div class="bank-info">
           <div>
@@ -228,6 +199,8 @@
     }
   }
 
+  amountInput.addEventListener('input', validateAmount);
+
   function validateAmount() {
     const amount = parseFloat(amountInput.value);
     if (!bankAdded || isNaN(amount) || amount <= 0 || amount > userBalance) {
@@ -241,41 +214,32 @@
     }
   }
 
-  amountInput.addEventListener('input', validateAmount);
-
   withdrawBtn.addEventListener('click', async () => {
-    if (!withdrawBtn.classList.contains('active')) return;
-
     const amount = parseFloat(amountInput.value);
-    if (!userId || isNaN(amount)) return;
+    if (!userId || isNaN(amount) || amount <= 0 || amount > userBalance) return;
 
     try {
       await db.collection("withdrawals").add({
-        userId: userId,
-        amount: amount,
+        userId,
+        amount,
         currency: userCurrency,
         status: "pending",
         createdAt: new Date().toISOString()
       });
 
       const userRef = dbBalance.collection("users").doc(userId);
-      await dbBalance.runTransaction(async (transaction) => {
-        const userDoc = await transaction.get(userRef);
-        if (!userDoc.exists) throw "User not found in balance DB.";
-        const currentBalance = userDoc.data().balance || 0;
-        if (amount > currentBalance) throw "Insufficient balance.";
-        transaction.update(userRef, {
-          balance: currentBalance - amount
-        });
+      await dbBalance.runTransaction(async (tx) => {
+        const doc = await tx.get(userRef);
+        const currentBalance = doc.data().balance || 0;
+        if (amount > currentBalance) throw "Insufficient balance";
+        tx.update(userRef, { balance: currentBalance - amount });
       });
 
-      alert('Withdrawal initiated!');
-      setTimeout(() => {
-        window.location.href = "dashboard.html";
-      }, 2000);
-    } catch (error) {
-      console.error("Withdrawal error:", error);
-      alert("Error processing withdrawal. Please try again.");
+      alert("Withdrawal initiated.");
+      window.location.href = "dashboard.html";
+    } catch (err) {
+      console.error(err);
+      alert("Withdrawal failed. Try again.");
     }
   });
 
@@ -291,46 +255,33 @@
       </div>
     `;
 
-    const inputs = ['firstName', 'accountNumber', 'ifscCode', 'bankName', 'mobile'].map(id => document.getElementById(id));
+    const fields = ['firstName', 'accountNumber', 'ifscCode', 'bankName', 'mobile'].map(id => document.getElementById(id));
     const confirmBtn = document.getElementById('confirm-btn');
 
-    const validateForm = () => {
-      const allFilled = inputs.every(input => input.value.trim() !== '');
+    fields.forEach(input => input.addEventListener('input', () => {
+      const allFilled = fields.every(input => input.value.trim() !== '');
       confirmBtn.disabled = !allFilled;
       confirmBtn.classList.toggle('active', allFilled);
-    };
-
-    inputs.forEach(input => input.addEventListener('input', validateForm));
+    }));
 
     confirmBtn.addEventListener('click', async () => {
-      if (!confirmBtn.classList.contains('active')) return;
-
       const code = prompt("Enter admin authorization code:");
       const codeDoc = await db.collection("settings").doc("authCode").get();
-      const validCode = codeDoc.exists ? codeDoc.data().code : null;
-
-      if (code !== validCode) {
-        alert("Invalid authorization code.");
+      if (code !== (codeDoc.exists ? codeDoc.data().code : '')) {
+        alert("Invalid code.");
         return;
       }
 
-      const bankDetails = {
-        userId,
-        firstName: inputs[0].value,
-        accountNumber: inputs[1].value,
-        ifscCode: inputs[2].value,
-        bankName: inputs[3].value,
-        mobile: inputs[4].value,
-        addedAt: new Date().toISOString()
-      };
+      const [firstName, accountNumber, ifscCode, bankName, mobile] = fields.map(f => f.value.trim());
+      const bankDetails = { userId, firstName, accountNumber, ifscCode, bankName, mobile, addedAt: new Date().toISOString() };
 
-      await db.collection('bankAccounts').doc(userId).set(bankDetails);
+      await db.collection("bankAccounts").doc(userId).set(bankDetails);
 
       bankPlaceholder.innerHTML = `
         <div class="bank-info">
           <div>
-            <div>${bankDetails.bankName.toUpperCase()}</div>
-            <div>XXXXXX${bankDetails.accountNumber.slice(-4)}</div>
+            <div>${bankName.toUpperCase()}</div>
+            <div>XXXXXX${accountNumber.slice(-4)}</div>
           </div>
           <input type="radio" checked />
         </div>
@@ -338,7 +289,7 @@
 
       bankAdded = true;
       validateAmount();
-      alert("Bank account added successfully!");
+      alert("Bank added successfully.");
     });
   });
 </script>
