@@ -213,14 +213,15 @@
     });
 
     function updateBalance(balance, currency) {
-      const symbolMap = {
-        USD: '$', EUR: '€', GBP: '£',
-        INR: '₹', CAD: 'C$', AUD: 'A$',
-        NGN: '₦', JPY: '¥'
-      };
-      const symbol = symbolMap[currency] || '$';
-      document.getElementById('balance-amount').textContent = `≈ ${symbol}${parseFloat(balance).toFixed(2)} ${currency}`;
-    }
+  const symbolMap = {
+    USD: '$', EUR: '€', GBP: '£',
+    INR: '₹', CAD: 'C$', AUD: 'A$',
+    NGN: '₦', JPY: '¥'
+  };
+  const symbol = symbolMap[currency] || '';
+  const formatted = `${symbol}${parseFloat(balance).toFixed(2)}`;
+  document.getElementById('balance-amount').textContent = formatted;
+}
   </script>
 
   <script>
