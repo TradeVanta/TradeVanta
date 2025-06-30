@@ -149,6 +149,7 @@
 </div>
 
 <script>
+  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyC0seQcc9v7ms5OqUCPi7rxaN4pJdP8zlE",
     authDomain: "withdrawapp-eb9a9.firebaseapp.com",
@@ -160,6 +161,7 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
+  // Secondary Firebase app for balance
   const firebaseConfigBalance = {
     apiKey: "AIzaSyDtCfsMkc_Z_9ZeF0TEHTDFBzLlkU-egSc",
     authDomain: "tradevanta-a3e0d.firebaseapp.com",
@@ -167,6 +169,13 @@
   };
   const appBalance = firebase.initializeApp(firebaseConfigBalance, "balanceApp");
   const dbBalance = firebase.firestore(appBalance);
+
+  const auth = firebase.auth();
+
+  let userBalance = 0;
+  let userCurrency = '$';
+  let bankAdded = false;
+  let userId = null;
 
   const amountInput = document.getElementById('amount');
   const withdrawBtn = document.getElementById('withdraw-btn');
@@ -177,13 +186,19 @@
   const bankPlaceholder = document.getElementById('bank-placeholder');
   const addBankBtn = document.getElementById('add-bank-btn');
 
-  let userBalance = 0;
-  let userCurrency = '$';
-  let bankAdded = false;
-  let userId = localStorage.getItem("userId");
+  // Wait for auth to get the current user
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+      alert("User not logged in.");
+      window.location.href = "register.html";
+      return;
+    }
+    userId = user.uid;
+    await fetchUserInfo();
+    await checkBankAccount();
+  });
 
   async function fetchUserInfo() {
-    if (!userId) return;
     const doc = await dbBalance.collection("users").doc(userId).get();
     if (doc.exists) {
       const data = doc.data();
@@ -196,7 +211,6 @@
   }
 
   async function checkBankAccount() {
-    if (!userId) return;
     const bankDoc = await db.collection('bankAccounts').doc(userId).get();
     if (bankDoc.exists) {
       const data = bankDoc.data();
@@ -327,9 +341,6 @@
       alert("Bank account added successfully!");
     });
   });
-
-  fetchUserInfo();
-  checkBankAccount();
 </script>
 
 </body>
