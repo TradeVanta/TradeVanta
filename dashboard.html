@@ -1,3 +1,6 @@
+ Would this retrieve and display username and balance 
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -97,6 +100,14 @@
       cursor: pointer;
     }
 
+    .balance-card button a {
+      color: inherit;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     .welcome-message {
       background-color: #222;
       margin: 1rem;
@@ -158,7 +169,9 @@
     <div class="label">Wallet Value</div>
     <div class="buttons">
       <button id="deposit-button"><i class="fas fa-wallet"></i>Deposit</button>
-      <button id="withdraw-button"><i class="fas fa-arrow-up"></i>Withdraw</button>
+      <button id="withdraw-button">
+        <a href="withdraw.html"><i class="fas fa-arrow-up"></i>Withdraw</a>
+      </button>
       <button id="transfer-button"><i class="fas fa-exchange-alt"></i>Transfer</button>
     </div>
   </div>
@@ -181,6 +194,7 @@
     </div>
   </div>
 
+  <!-- JivoChat Script -->
   <script>
     function openJivoChat() {
       if (window.jivo_api) jivo_api.open();
@@ -189,10 +203,16 @@
     document.getElementById('deposit-button').addEventListener('click', openJivoChat);
     document.getElementById('transfer-button').addEventListener('click', openJivoChat);
 
+    // Open history and login pages
+    document.getElementById('logout-button').addEventListener('click', () => {
+      window.location.href = 'login.html';
+    });
+
     document.getElementById('history-button').addEventListener('click', () => {
       window.location.href = 'history.html';
     });
 
+    // Optional: Make other service items open chat except Logout/History
     const serviceItems = document.querySelectorAll('.service-item');
     serviceItems.forEach(item => {
       const isLogout = item.id === 'logout-button';
@@ -212,6 +232,7 @@
     }
   </script>
 
+  <!-- Jivochat Widget -->
   <script>
     (function () {
       var widget_id = 'wV6zTzxS5q';
@@ -221,7 +242,7 @@
         var s = document.createElement('script');
         s.type = 'text/javascript';
         s.async = true;
-        s.src = 'https://code.jivosite.com/script/widget/' + widget_id;
+        s.src = '//code.jivosite.com/script/widget/' + widget_id;
         var ss = document.getElementsByTagName('script')[0];
         ss.parentNode.insertBefore(s, ss);
       }
@@ -237,40 +258,35 @@
     })();
   </script>
 
+  <!-- Firebase SDK -->
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-  import {
-    getFirestore,
-    doc,
-    onSnapshot
-  } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import {
+      getFirestore,
+      doc,
+      onSnapshot,
+      updateDoc
+    } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDtCfsMkc_Z_9ZeF0TEHTDFBzLlkU-egSc",
-    authDomain: "tradevanta-a3e0d.firebaseapp.com",
-    projectId: "tradevanta-a3e0d",
-    storageBucket: "tradevanta-a3e0d.appspot.com",
-    messagingSenderId: "441098922985",
-    appId: "1:441098922985:web:163878a0ef5b2054f8b978"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtCf….xxx",
+      authDomain: "tradevanta-a3e0d.firebaseapp.com",
+      projectId: "tradevanta-a3e0d",
+      storageBucket: "tradevanta-a3e0d.appspot.com",
+      messagingSenderId: "441098922985",
+      appId: "1:441098922985:web:163878a0ef5b2054f8b978"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  function updateBalance(balance, currency) {
-    const symbol = {
-      USD: '$', EUR: '€', GBP: '£',
-      INR: '₹', CAD: 'C$', AUD: 'A$',
-      NGN: '₦', JPY: '¥'
-    }[currency] || '$';
-    document.getElementById('balance-amount').textContent = `≈ ${symbol}${parseFloat(balance).toFixed(2)}`;
-  }
+    function listenToUserData() {
+      const userId = localStorage.getItem("userId");
+      if (!userId) {
+        console.error("User ID not found in localStorage.");
+        return;
+      }
 
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      const userId = user.uid;
       const userRef = doc(db, "users", userId);
       onSnapshot(userRef, (docSnap) => {
         if (docSnap.exists()) {
@@ -278,36 +294,14 @@
           document.getElementById("welcome-username").textContent = `Welcome, ${data.username || 'User'}`;
           updateBalance(data.balance || 0, data.currency || 'USD');
         } else {
-          document.getElementById("welcome-username").textContent = "Welcome";
-          updateBalance(0, 'USD');
+          console.log("User document does not exist.");
         }
       }, (error) => {
-        console.error("Error reading user data:", error);
-        document.getElementById("welcome-username").textContent = "Welcome, Error";
-        updateBalance(0, 'USD');
+        console.error("Error listening to user document:", error);
       });
-    } else {
-      window.location.href = 'register.html';
     }
-  });
 
-  // Logout button: sign out and redirect to register.html
-  document.getElementById('logout-button').addEventListener('click', async () => {
-    try {
-      await signOut(auth);
-      window.location.href = 'register.html';
-    } catch (error) {
-      console.error("Sign out error:", error);
-      alert("Failed to log out. Please try again.");
-    }
-  });
-
-  // Withdraw button
-  document.getElementById('withdraw-button').addEventListener('click', () => {
-    window.location.href = 'withdraw.html';
-  });
-
-  // History button already handled above (so no change here)
-</script>
+    document.addEventListener("DOMContentLoaded", listenToUserData);
+  </script>
 </body>
 </html>
