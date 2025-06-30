@@ -218,7 +218,7 @@
     INR: '₹', CAD: 'C$', AUD: 'A$',
     NGN: '₦', JPY: '¥'
   };
-  const symbol = symbolMap[currency] || '';
+  const symbol = symbolMap[currency?.toUpperCase()] || '';
   const formatted = `${symbol}${parseFloat(balance).toFixed(2)}`;
   document.getElementById('balance-amount').textContent = formatted;
 }
