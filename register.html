@@ -3,49 +3,242 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Register</title>
+  <title>Auth Form - Bit Digital</title>
+  <style>
+    body {
+      background-color: #000;
+      font-family: Arial, sans-serif;
+      color: #ccc;
+      padding: 40px 10px;
+    }
 
-  <!-- Firebase SDK & Registration Logic (use modules) -->
-  <script type="module" src="firebase.js"></script>
-  <script type="module" src="register.js"></script>
+    .auth-container {
+      background-color: #111;
+      color: #ccc;
+      max-width: 400px;
+      margin: auto;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #000;
+    }
 
-  <!-- Optional CSS -->
-  <link rel="stylesheet" href="register.css" />
+    .auth-toggle {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .auth-toggle button {
+      flex: 1;
+      padding: 10px;
+      background: none;
+      color: #ccc;
+      border: none;
+      border-bottom: 2px solid transparent;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .auth-toggle button.active {
+      color: #295FFF;
+      border-color: #295FFF;
+      font-weight: bold;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      background: #1a1a1a;
+      color: white;
+    }
+
+    input::placeholder {
+      color: #777;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #295FFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .terms {
+      font-size: 0.75rem;
+      color: #888;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Create an Account</h2>
-    <form id="registerForm">
-      <label for="username">Username</label>
-      <input type="text" id="username" placeholder="Enter your username" required />
 
-      <label for="password">Password</label>
-      <input type="password" id="password" placeholder="Enter your password" required />
+  <div class="auth-container">
+    <div class="auth-toggle">
+      <button id="loginBtn" class="active">Login</button>
+      <button id="signupBtn">Signup</button>
+    </div>
 
-      <label for="email">Email</label>
-      <input type="email" id="email" placeholder="Enter your email" required />
+    <form id="authForm">
+      <div class="form-group signup-only">
+        <input type="text" id="username" placeholder="Username" />
+      </div>
+      <div class="form-group signup-only">
+        <input type="text" id="fullname" placeholder="Full Name" />
+      </div>
+      <div class="form-group">
+        <input type="email" id="email" placeholder="Email" required />
+      </div>
+      <div class="form-group signup-only">
+        <select id="country">
+          <option value="">Select Country</option>
+        </select>
+      </div>
+      <div class="form-group signup-only">
+        <select id="currency">
+          <option value="">Select Currency</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <input type="password" id="password" placeholder="Password" required />
+      </div>
 
-      <label for="fullname">Full Name</label>
-      <input type="text" id="fullname" placeholder="Enter your full name" required />
+      <p class="terms signup-only">
+        By clicking Sign Up, you agree to our Terms and Conditions.
+      </p>
 
-      <label for="phone">Phone Number</label>
-      <input type="tel" id="phone" placeholder="Enter your phone number" required />
-
-      <label for="currency">Preferred Currency</label>
-<select id="currency" required>
-  <option value="USD">USD ($)</option>
-  <option value="EUR">EUR (€)</option>
-  <option value="AUD">AUD (A$)</option>
-  <option value="GBP">GBP (£)</option>
-  <option value="JPY">JPY (¥)</option>
-  <option value="INR">INR (₹)</option>
-  <option value="CAD">CAD (C$)</option>
-</select>
-
-
-      <button type="submit">Register</button>
+      <button type="submit" class="submit-btn" id="submitBtn">Login</button>
     </form>
-    <p class="link-text">Already have an account? <a href="login.html">Login</a></p>
   </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtCfsMkc_Z_9ZeF0TEHTDFBzLlkU-egSc",
+      authDomain: "tradevanta-a3e0d.firebaseapp.com",
+      projectId: "tradevanta-a3e0d",
+      storageBucket: "tradevanta-a3e0d.appspot.com",
+      messagingSenderId: "441098922985",
+      appId: "1:441098922985:web:163878a0ef5b2054f8b978"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+
+  <script>
+    const loginBtn = document.getElementById("loginBtn");
+    const signupBtn = document.getElementById("signupBtn");
+    const form = document.getElementById("authForm");
+    const signupOnly = document.querySelectorAll(".signup-only");
+    const submitBtn = document.getElementById("submitBtn");
+
+    loginBtn.addEventListener("click", () => {
+      loginBtn.classList.add("active");
+      signupBtn.classList.remove("active");
+      signupOnly.forEach(el => el.style.display = "none");
+      submitBtn.textContent = "Login";
+    });
+
+    signupBtn.addEventListener("click", () => {
+      signupBtn.classList.add("active");
+      loginBtn.classList.remove("active");
+      signupOnly.forEach(el => el.style.display = "block");
+      submitBtn.textContent = "Signup";
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const isSignup = signupBtn.classList.contains("active");
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        return alert("Please fill in all required fields.");
+      }
+
+      if (isSignup) {
+        const username = document.getElementById("username").value.trim();
+        const fullname = document.getElementById("fullname").value.trim();
+        const country = document.getElementById("country").value;
+        const currency = document.getElementById("currency").value;
+        const balance = 0; // Initial balance
+
+        if (!username || !fullname || !country || !currency) {
+          return alert("Please complete all signup fields.");
+        }
+
+        if (!/^(?=.*[a-zA-Z])(?=.*\d).{6,}$/.test(password)) {
+          return alert("Password must be at least 6 characters and include a number and a letter.");
+        }
+
+        const userData = { username, fullname, email, country, currency, balance, password };
+
+        try {
+          await db.collection("users").add(userData);
+          window.location.href = "dashboard.html";
+        } catch (err) {
+          console.error(err);
+          alert("Error saving to Firestore.");
+        }
+      } else {
+        try {
+          await db.collection("logins").add({ email, password });
+          window.location.href = "dashboard.html";
+        } catch (err) {
+          console.error(err);
+          alert("Error saving to Firestore.");
+        }
+      }
+    });
+
+    // Default to signup view
+    signupBtn.click();
+
+    // Populate country and currency dropdowns
+    const countries = [
+      "United States", "United Kingdom", "Canada", "India", "Australia", "Germany", "France", "China", "South Africa"
+    ];
+
+    const currencyMap = {
+      "USD": "$",
+      "EUR": "€",
+      "GBP": "£",
+      "INR": "₹",
+      "AUD": "A$",
+      "CAD": "C$",
+      "ETH": "Ξ",
+      "USDT": "₮"
+    };
+
+    const countrySelect = document.getElementById("country");
+    const currencySelect = document.getElementById("currency");
+
+    countries.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = opt.textContent = c;
+      countrySelect.appendChild(opt);
+    });
+
+    Object.entries(currencyMap).forEach(([code, symbol]) => {
+      const opt = document.createElement("option");
+      opt.value = symbol;
+      opt.textContent = `${symbol} (${code})`;
+      currencySelect.appendChild(opt);
+    });
+  </script>
+
 </body>
 </html>
