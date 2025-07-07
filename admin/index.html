@@ -79,13 +79,11 @@
     }
 
     .table-header, .table-row {
-      display: grid;
-      grid-template-columns: 0.4fr 1.4fr 1.2fr 1.5fr 1.5fr;
-      align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px solid #444;
-    }
-
+  display: grid;
+  grid-template-columns: 0.3fr 1.2fr 2fr 1.2fr 1.2fr 1.2fr;
+  overflow-x: auto;
+  white-space: nowrap;
+}
     .table-header {
       font-weight: bold;
     }
@@ -143,18 +141,19 @@
   <div id="login-error" class="login-error"></div>
 </div>
 
-<div id="user-table-container" class="user-table">
+<div id="user-table-container" class="user-table" style="overflow-x:auto;">
   <div class="search-bar">
     <input type="text" id="searchInput" placeholder="Search by username...">
   </div>
 
   <div class="table-header">
-    <div class="cell">No.</div>
-    <div class="cell">Username</div>
-    <div class="cell">Balance</div>
-    <div class="cell">Action 1</div>
-    <div class="cell">Action 2</div>
-  </div>
+  <div class="cell">No.</div>
+  <div class="cell">Username</div>
+  <div class="cell">Email</div>
+  <div class="cell">Balance</div>
+  <div class="cell">Action 1</div>
+  <div class="cell">Action 2</div>
+</div>
 
   <div id="tableBody"></div>
   <button id="logout-button">Log Out</button>
@@ -165,14 +164,14 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <script>
- const firebaseConfig = {
-      apiKey: "AIzaSyDtCfsMkc_Z_9ZeF0TEHTDFBzLlkU-egSc",
-      authDomain: "tradevanta-a3e0d.firebaseapp.com",
-      projectId: "tradevanta-a3e0d",
-      storageBucket: "tradevanta-a3e0d.appspot.com",
-      messagingSenderId: "441098922985",
-      appId: "1:441098922985:web:163878a0ef5b2054f8b978"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyDtCfsMkc_Z_9ZeF0TEHTDFBzLlkU-egSc",
+    authDomain: "tradevanta-a3e0d.firebaseapp.com",
+    projectId: "tradevanta-a3e0d",
+    storageBucket: "tradevanta-a3e0d.appspot.com",
+    messagingSenderId: "441098922985",
+    appId: "1:441098922985:web:163878a0ef5b2054f8b978"
+  };
 
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
@@ -198,6 +197,7 @@
 
   function renderTable(filter = '') {
     tableBody.innerHTML = '';
+
     users
       .filter(user =>
         (user.username?.toLowerCase().includes(filter.toLowerCase())) ||
@@ -208,20 +208,21 @@
         row.className = 'table-row';
 
         const balanceDisplay = user.balance !== undefined
-          ? `${user.currency ? user.currency + ' ' : ''}${parseFloat(user.balance).toFixed(2)}`
+          ? `${user.currency || ''} ${parseFloat(user.balance).toFixed(2)}`
           : '';
 
         const cells = `
           <div class="cell">${index + 1}</div>
           <div class="cell">${user.username || ''}</div>
+          <div class="cell">${user.email || ''}</div>
           <div class="cell">${balanceDisplay}</div>
-          <div class="cell">
+          <div class="cell actions">
             <button class="edit-btn" title="Edit">Edit ✍️</button>
             <div class="hidden-save-cancel" style="display:none;">
               <button class="save-btn" title="Save">✔️</button>
             </div>
           </div>
-          <div class="cell">
+          <div class="cell actions">
             <button class="delete-btn" title="Delete">Delete 🗑️</button>
           </div>
         `;
@@ -231,20 +232,29 @@
         const deleteBtn = row.querySelector('.delete-btn');
         const saveCancelDiv = row.querySelector('.hidden-save-cancel');
         const saveBtn = saveCancelDiv.querySelector('.save-btn');
-
-        const editableCell = row.querySelectorAll('.cell')[2];
+        const balanceCell = row.querySelectorAll('.cell')[3];
 
         editBtn.addEventListener('click', () => {
-          startEdit(editableCell, user);
+          startEdit(balanceCell, user);
           editBtn.style.display = 'none';
           saveCancelDiv.style.display = 'flex';
         });
 
         saveBtn.addEventListener('click', async () => {
-          const updatedBalance = getUpdatedBalance(editableCell);
+          const updatedBalance = getUpdatedBalance(balanceCell);
           if (updatedBalance !== null) {
             try {
-              await db.collection('users').doc(user.id).update({ balance: updatedBalance });
+              const userRef = db.collection('users').doc(user.id);
+              await userRef.update({ balance: updatedBalance });
+
+              // Log to transactions subcollection
+              await db.collection('users').doc(user.id)
+                .collection('transactions').add({
+                  type: "Deposit",
+                  amount: updatedBalance,
+                  timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
               users = users.map(u => u.id === user.id ? { ...u, balance: updatedBalance } : u);
               renderTable(searchInput.value);
             } catch (error) {
@@ -273,8 +283,8 @@
 
   function startEdit(cell, user) {
     const input = document.createElement('input');
-    input.value = user.balance;
     input.type = 'number';
+    input.value = user.balance;
     cell.innerHTML = '';
     cell.appendChild(input);
   }
